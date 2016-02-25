@@ -138,34 +138,35 @@ module VictorWarhem_solutions_PBS1
 	question_1d(1000)
 
 	function question_2a(n)
-
+	n=10
+		function pr(p,t1,t2)
+		exp(t1)/p .+ exp(t2).* p^-0.5 - 2
+		end
 		Sigma=[0.02 0.01; 0.01 0.01]
-		Halfsigma=chol(Sigma,Val{:L})
+		Halfsigma=chol(Sigma,Val{:U})
 
 		# First we use the Gauss-Hermite Integration method
 		
-		nodes1, weights1 = gausshermite(n)
-		nodes2, weights2 = gausshermite(n)
+		nodes,weights = gausshermite(n)
+	
 
-		nodes = hcat(kron(ones(n),nodes1),kron(nodes2,ones(n)))
+		nods = hcat(kron(ones(n),nodes),kron(nodes,ones(n)))
 
 		# we define the weights and what's inside the function after changing the variable:
 
-		w = kron(weights1,weights2) / pi # pi instead of sqrt(pi) because of 2 dimensions
-		g = Halfsigma*transpose(nodes) + zeros(n*n,2)
+		w = kron(weights,weights) .*(1/pi) # pi instead of sqrt(pi) because of 2 dimensions
+		g = Halfsigma*transpose(nods) + zeros(2,n*n)
 		
 		# We calculate p such that nodes always respect the market clearing condition
-
-		u = []
-		u2= []
-
+		u=[]
+		u2=[]
 		for i = 1:n*n
-		function g(p)
-				dem(p, g[1,i], grid[2,i])
+		function d(p)
+		pr(p, g[1,i], g[2,i])
 		end
-		ppt=fzero(p-> g(p), [0.001,1000]
-		push!(p,ppt)
-		push!(p2,ppt^2)
+		ppt=fzero(p-> d(p), [0.001,1000])
+		push!(u,ppt)
+		push!(u2,ppt^2)
 		end
 
 		# We find the expectation and the variance
@@ -174,7 +175,7 @@ module VictorWarhem_solutions_PBS1
     
     		println("I find as expectancy with n = $n $(round(resultexp,5)).")
 
-		resultvar=transpose(y2)*w-resultexp^2
+		resultvar=transpose(u2)*w-resultexp .^2
 		
     		println("I find as variance with n = $n $(round(resultvar,5)).")
 
@@ -185,39 +186,33 @@ module VictorWarhem_solutions_PBS1
 
  	function question_2b(n)
 
- 		Sigma=[0.02 0.01; 0.01 0.01]
-		Halfsigma=chol(Sigma,Val{:L})
-
-  		# Now we use the lognormal distribution to generate the nodes and the weights by assuming a log function that is normal implies a function that is lognormal.
- 
- 		log1 = LogNormal(0.0,0.02)
- 		log2 = LogNormal(0.0,0.01)
- 		nodes1 = rand(log1,n)
- 		nodes2 = rand(log2,n)
- 
- 		nodes = hcat(kron(ones(n),nodes1),kron(nodes2,ones(n)))
-
-		# we define the weights and what's inside the function after changing the variable:
-
-		w = ones(n*n) ./ n
-		g =  nodes * Halfsigma + zeros(n*n,2)
-		
-		# We calculate p such that nodes always respect the market clearing condition
-
-		p = []
-
-		for i = 1:n*n
-		function dd(p)
-				exp(g[1,i])*p^(-1) .+ exp(g[2,i]) .* p^(-0.5) - 2
-		end
-		push!(p,fzeros(dd, [0,3]))
-		resultexp=p[1] ./n
-		resultexp2=(p[1].^2)./n
+		function pr(p,t1,t2)
+		exp(t1)/p .+ exp(t2).* p^-0.5 - 2
 		end
 
-		# the variance
-		
-		resultvar=resultexp2-resultexp^2
+		nodes = rand(n)
+		sigma = hcat([0.02, 0.01],[0.01,0.01])
+		omega = chol(sigma,Val{:U})
+
+		nod = hcat(kron(ones(n), nodes),kron(nodes, ones(n)))
+		grid = omega* transpose(nod) + zeros(2, n*n)
+
+		w = ones(n*n, 1).* 1/(n*n)
+
+		u = []
+		u2 = []
+		for i=1:n*n
+		function d(p)
+		pr(p, grid[1,i], grid[2,i]) 
+		end
+		ppt = fzero(p -> d(p), [0.001,1000])
+		push!(u, ppt)
+		push!(u2, ppt^2)
+		end
+
+resultexp = transpose(u)*w
+resultvar = transpose(u2)*w - resultexp .^2
+	
     
     		println("I find as expectancy with n = $n $(round(resultexp,5)).")
 
