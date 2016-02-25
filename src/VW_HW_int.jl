@@ -151,7 +151,7 @@ module VictorWarhem_solutions_PBS1
 
 		# we define the weights and what's inside the function after changing the variable:
 
-		w = kron(weights1,weights2) / sqrt(pi)
+		w = kron(weights1,weights2) / pi # pi instead of sqrt(pi) because of 2 dimensions
 		g =  nodes * Halfsigma + zeros(n*n,2)
 		
 		# We calculate p such that nodes always respect the market clearing condition
