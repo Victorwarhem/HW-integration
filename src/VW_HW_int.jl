@@ -152,28 +152,33 @@ module VictorWarhem_solutions_PBS1
 		# we define the weights and what's inside the function after changing the variable:
 
 		w = kron(weights1,weights2) / pi # pi instead of sqrt(pi) because of 2 dimensions
-		g =  nodes * Halfsigma + zeros(n*n,2)
+		g = Halfsigma*transpose(nodes) + zeros(n*n,2)
 		
 		# We calculate p such that nodes always respect the market clearing condition
 
-		p = []
+		u = []
+		u2= []
 
 		for i = 1:n*n
-		function dd(p)
-				exp(g[i,1])*p^(-1) .+ exp(g[i,2]) .* p^(-0.5) - 2
+		function g(p)
+				dem(p, g[1,i], grid[2,i])
 		end
-		push!(p,fzeros(dd, [0,3]))
+		ppt=fzero(p-> g(p), [0.001,1000]
+		push!(p,ppt)
+		push!(p2,ppt^2)
 		end
 
-		# We find the expectation
+		# We find the expectation and the variance
  
-    	resultexp=sum(w .*p)
+    		resultexp=transpose(u)*w
     
-    	println("I find as expectancy with n = $n $(round(resultexp,5)).")
+    		println("I find as expectancy with n = $n $(round(resultexp,5)).")
 
-    	println("No results for the variance.")
+		resultvar=transpose(y2)*w-resultexp^2
+		
+    		println("I find as variance with n = $n $(round(resultvar,5)).")
 
-    	println("")
+    		println("")
 	end
 
 	question_2a(10)
@@ -203,23 +208,25 @@ module VictorWarhem_solutions_PBS1
 
 		for i = 1:n*n
 		function dd(p)
-				exp(g[i,1])*p^(-1) .+ exp(g[i,2]) .* p^(-0.5) - 2
+				exp(g[1,i])*p^(-1) .+ exp(g[2,i]) .* p^(-0.5) - 2
 		end
 		push!(p,fzeros(dd, [0,3]))
+		resultexp=p[1] ./n
+		resultexp2=(p[1].^2)./n
 		end
 
-		# We find the expectation
- 
-    	resultexp=sum(w .*p)
+		# the variance
+		
+		resultvar=resultexp2-resultexp^2
     
-    	println("I find as expectancy with n = $n $(round(resultexp,5)), which is not a good approximation, as everyone can tell.")
+    		println("I find as expectancy with n = $n $(round(resultexp,5)).")
 
-    	println("No results for the variance.")
+    		println("I find as variance with n = $n $(round(resultvar,5))")
 
-    	println("")
+    		println("")
  	end
  
- question_2b(10)
+ 	question_2b(10)
 
  	function runall(n=10)
  		println("running all questions of HW-integration:")
